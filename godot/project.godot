@@ -1,0 +1,30 @@
+; Engine configuration file.
+; Criminal Story — Godot 4.3 project (3D, story-driven)
+; Main scene is the Chapter 0 opening (hospital / moment of birth),
+; which then transitions to the Michigan residential town prototype.
+
+config_version=5
+
+[application]
+
+config/name="Criminal Story"
+config/description="Story-driven first-person life story. Chapter 0: the moment of birth (Rochester, Michigan, 1956-02-29). Then a small Michigan residential town prototype for Chapters 1-2."
+run/main_scene="res://scenes/opening.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/resizable=true
+
+[physics]
+
+3d/default_gravity=18.0
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
+environment/defaults/default_clear_color=Color(0.53, 0.7, 0.9, 1)
