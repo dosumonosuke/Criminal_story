@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Criminal Story — Prototype 0.1: Aileen Wuornos</title>
+<style>
+  body{margin:0;background:#111;color:#eee;font-family:system-ui,"Hiragino Sans","Noto Sans JP",sans-serif;text-align:center}
+  h1{font-size:20px;margin:14px 0 4px}
+  #sub{color:#aaa;font-size:13px;margin-bottom:10px}
+  #wrap{position:relative;width:min(960px,96vw);margin:0 auto}
+  canvas{width:100%;background:#000;display:block;border:1px solid #444}
+  #hud{position:absolute;left:10px;top:8px;text-align:left;font-size:14px;text-shadow:0 1px 3px #000}
+  #story{width:min(960px,96vw);margin:10px auto;padding:12px 14px;background:#1c1c1c;border:1px solid #333;text-align:left;line-height:1.8;box-sizing:border-box;min-height:120px}
+  #story b{color:#ffd76a}
+  button{background:#ffd76a;color:#111;border:0;padding:10px 22px;font-size:16px;border-radius:6px;cursor:pointer}
+  #overlay{position:absolute;inset:0;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;line-height:1.9}
+  #overlay h2{margin:0 0 8px;font-size:22px;color:#ffd76a}
+  .small{font-size:12px;color:#999}
+  kbd{background:#333;border:1px solid #555;border-radius:4px;padding:1px 6px}
+</style>
+</head>
+<body>
+<h1>CRIMINAL STORY</h1>
+<div id="sub">試作版 0.1 ／ ランダム抽選で選ばれた1人目：アイリーン・ウォーノス（Aileen Wuornos, 1956–2002）</div>
+<div id="wrap">
+  <canvas id="cv" width="960" height="540"></canvas>
+  <div id="hud"></div>
+  <div id="overlay">
+    <h2 id="ov-title">抽選結果</h2>
+    <div id="ov-text">世界中の極悪犯罪者10人の候補からランダムに1人を抽選しました。<br>1人目は <b>アイリーン・ウォーノス</b> です。<br>赤ちゃんとして生まれた瞬間から、2002年に刑が執行されるまでを、一人称でたどります。<br><span class="small">※ 犯罪の手口や残虐な描写は扱いません。公開資料に基づく事実の要約で構成しています。</span></div>
+    <p><button id="startBtn">人生をはじめる</button></p>
+    <div class="small">操作：<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移動 ／ マウス（クリックでロック）または <kbd>←</kbd><kbd>→</kbd> 視点 ／ 光る出口に触れると次の章へ</div>
+  </div>
+</div>
+<div id="story"></div>
+<script>
+"use strict";
+// ---- Chapter data (facts summarised from Britannica / public records; see docs/RESEARCH.md) ----
+const CHAPTERS=[
+ {year:"1956", title:"第1章 誕生", place:"ミシガン州ロチェスター", height:0.35, wall:[120,90,70],
+  text:"1956年2月29日、アイリーン・キャロル・ピットマンはミシガン州ロチェスターで生まれた。両親は10代で結婚し、彼女が生まれる前に別れている。父とは一度も会うことがなかった。物語は、まだ何も知らない赤ん坊の視点から始まる。"},
+ {year:"1960", title:"第2章 祖父母の家", place:"ミシガン州トロイ", height:0.55, wall:[90,110,90],
+  text:"4歳になる直前の1960年1月、母は兄キースとアイリーンを置いて家を出た。2人は母方の祖父母に引き取られ、同年3月に養子となった。トロイの家での暮らしは穏やかではなかったと、後年彼女は語っている。"},
+ {year:"1970–1971", title:"第3章 少女期の終わり", place:"ミシガン州", height:0.8, wall:[100,80,110],
+  text:"14歳のとき妊娠し、1971年に未婚の母の施設で男の子を出産した。子どもは養子に出された。祖母が亡くなると兄とともに州の保護下に置かれ、彼女は学校を離れ、15歳で家を出て自活するようになる。"},
+ {year:"1974–1976", title:"第4章 放浪と最初の逮捕", place:"コロラド → フロリダ", height:1.0, wall:[110,100,60],
+  text:"1974年、18歳で飲酒運転などの容疑で逮捕された。その後も各地を転々とし、1976年にフロリダへ移る。同年に兄キースががんで亡くなり、69歳の男性と結婚したが、短期間で破綻した。"},
+ {year:"1981–1986", title:"第5章 フロリダでの日々", place:"フロリダ州", height:1.0, wall:[70,100,120],
+  text:"1980年代前半、フロリダで強盗などの罪で服役と出所を繰り返した。1986年、デイトナのバーでティリア・ムーアと出会い、2人で暮らし始める。生活はハイウェイ沿いの仕事で支えられていた。"},
+ {year:"1989–1990", title:"第6章 事件の時期", place:"フロリダのハイウェイ", height:1.0, wall:[130,60,60],
+  text:"1989年11月から1990年11月にかけて、フロリダで7人の男性が殺害された。彼女は後に、正当防衛だったと主張した。この章では事件そのものの描写は行わない。ハイウェイを歩き抜け、時期の終わりへ進むだけである。"},
+ {year:"1990–1992", title:"第7章 逮捕と裁判", place:"フロリダ州ポートオレンジ", height:1.0, wall:[80,80,90],
+  text:"1990年7月、被害者の車の事故がきっかけで指紋などが結びついた。1991年1月9日、バー「The Last Resort」で逮捕される。ムーアは免責と引き換えに捜査へ協力し、自白が得られた。1992年の裁判で最初の殺人について有罪となり、死刑判決を受けた。他の5件でも死刑判決が重なった（7人目については裁判が行われなかった）。"},
+ {year:"1992–2002", title:"第8章 死刑囚監房、そして最期", place:"フロリダ州立刑務所", height:1.0, wall:[60,60,60],
+  text:"10年以上を死刑囚監房で過ごした。2001年、彼女は控訴を取り下げた。2002年10月9日午前9時47分、フロリダ州立刑務所で薬物注射による刑が執行され、46歳で亡くなった。最後の食事は辞退し、コーヒー1杯だけを口にしたという。遺灰は故郷ミシガンに撒かれた。――物語はここで終わる。"}
+];
+// ---- Raycaster engine ----
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const W=cv.width,H=cv.height;
+const MAP=[
+"############",
+"#..........#",
+"#..##..##..#",
+"#..........#",
+"#..#....#..#",
+"#..#....#..#",
+"#..........#",
+"#..##..##..#",
+"#..........#",
+"#..#....#E.#",
+"#..........#",
+"############"];
+const MW=12,MH=12;
+let ch=0,playing=false,finished=false;
+let px=1.5,py=1.5,ang=0.4;
+const keys={};
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true; if(e.key==='Enter'&&!playing&&!finished) startChapter(ch);});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+cv.addEventListener('click',()=>{ if(playing) cv.requestPointerLock&&cv.requestPointerLock(); });
+addEventListener('mousemove',e=>{ if(document.pointerLockElement===cv) ang+=e.movementX*0.0025; });
+document.getElementById('startBtn').addEventListener('click',()=>startChapter(0));
+function startChapter(i){
+  ch=i; px=1.5; py=1.5; ang=0.4; playing=true;
+  document.getElementById('overlay').style.display='none';
+  const c=CHAPTERS[ch];
+  document.getElementById('story').innerHTML="<b>"+c.title+"（"+c.year+"／"+c.place+"）</b><br>"+c.text+"<br><span class='small'>目的：部屋を一人称で進み、光る出口（E）までたどり着くこと。</span>";
+  document.getElementById('hud').innerHTML=c.title+" ― "+c.year+"<br>"+c.place;
+}
+function showOverlay(title,text,btn){
+  playing=false;
+  const ov=document.getElementById('overlay');
+  ov.style.display='flex';
+  document.getElementById('ov-title').textContent=title;
+  document.getElementById('ov-text').innerHTML=text;
+  const b=document.getElementById('startBtn'); b.textContent=btn;
+  b.onclick=()=>{ if(finished){ location.reload(); } else startChapter(ch); };
+}
+function wallAt(x,y){
+  const mx=Math.floor(x),my=Math.floor(y);
+  if(mx<0||my<0||mx>=MW||my>=MH) return '#';
+  return MAP[my][mx];
+}
+function exitPos(){ for(let y=0;y<MH;y++)for(let x=0;x<MW;x++) if(MAP[y][x]==='E') return {x:x+0.5,y:y+0.5}; }
+function step(){
+  if(playing){
+    const sp=0.055, rs=0.045;
+    let dx=0,dy=0;
+    const f=(keys['w']||keys['arrowup'])?1:(keys['s']||keys['arrowdown'])?-1:0;
+    const s=(keys['d'])?1:(keys['a'])?-1:0;
+    if(keys['arrowleft']) ang-=rs; if(keys['arrowright']) ang+=rs;
+    dx=(Math.cos(ang)*f - Math.sin(ang)*s)*sp;
+    dy=(Math.sin(ang)*f + Math.cos(ang)*s)*sp;
+    if(wallAt(px+dx,py)!=='#') px+=dx;
+    if(wallAt(px,py+dy)!=='#') py+=dy;
+    const ex=exitPos();
+    if(Math.hypot(px-ex.x,py-ex.y)<0.55){
+      if(ch>=CHAPTERS.length-1){ finished=true; showOverlay("物語の終わり","アイリーン・ウォーノス（1956–2002）の人生は、ここで終わります。<br>プレイありがとうございました。次は候補プールの別の人物を追加していく予定です。","タイトルへ戻る"); }
+      else { ch++; showOverlay(CHAPTERS[ch].title+"へ",CHAPTERS[ch].year+" ／ "+CHAPTERS[ch].place+"<br>次の章へ進みます。","次の章へ"); }
+    }
+  }
+  draw(); requestAnimationFrame(step);
+}
+function draw(){
+  const c=CHAPTERS[ch]||CHAPTERS[0];
+  const horizon=H/2 + (1-c.height)*70;
+  ctx.fillStyle='#202028'; ctx.fillRect(0,0,W,horizon);
+  ctx.fillStyle='#3a332a'; ctx.fillRect(0,horizon,W,H-horizon);
+  const fov=Math.PI/3, rays=240;
+  for(let i=0;i<rays;i++){
+    const ra=ang-fov/2+fov*i/rays;
+    let d=0, hit='#';
+    while(d<20){ d+=0.02; const x=px+Math.cos(ra)*d, y=py+Math.sin(ra)*d; const t=wallAt(x,y); if(t==='#'||t==='E'){hit=t;break;} }
+    const cd=d*Math.cos(ra-ang);
+    const wh=Math.min(H*1.4, H*0.9/Math.max(cd,0.05));
+    let col;
+    if(hit==='E') col=[255,215,106];
+    else col=c.wall.map(v=>Math.max(20, v*(1-cd/14)));
+    ctx.fillStyle='rgb('+(col[0]|0)+','+(col[1]|0)+','+(col[2]|0)+')';
+    const x0=i*(W/rays);
+    ctx.fillRect(x0, horizon-wh/2, W/rays+1, wh);
+  }
+  // minimap
+  const s=9; ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(W-MW*s-8,8,MW*s,MH*s);
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){ const t=MAP[y][x]; if(t==='#')ctx.fillStyle='#888'; else if(t==='E')ctx.fillStyle='#ffd76a'; else continue; ctx.fillRect(W-MW*s-8+x*s,8+y*s,s-1,s-1); }
+  ctx.fillStyle='#ff5555'; ctx.beginPath(); ctx.arc(W-MW*s-8+px*s,8+py*s,3,0,7); ctx.fill();
+}
+draw(); requestAnimationFrame(step);
+</script>
+</body>
+</html>
