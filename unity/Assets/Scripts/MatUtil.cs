@@ -22,6 +22,11 @@ namespace CriminalStory
             return Get(color, false, 0.9f);
         }
 
+        public static Material Get(Color color, bool emissive)
+        {
+            return Get(color, emissive, 0.9f);
+        }
+
         public static Material Get(Color color, bool emissive, float roughness)
         {
             string key = color.ToString() + "|" + emissive + "|" + roughness;
