@@ -38,6 +38,12 @@ Godot 4 の本物の3Dに切り替えました。詳しくは `godot/README.md` 
 `data/people.json` に一覧と実装状況を記録しています。
 実装済みの人物の中から、製品版では開始時にランダムで1人が選ばれる仕様です。
 
+## Unity版の確認手順（PC用）
+
+Unity版をWindows PCで開いて確認する手順は `docs/PC_VERIFICATION_GUIDE.md` にあります。
+GitHub版には画像素材が入っていないため、手順の中にある `unity/fetch-assets.ps1` で
+公式サイト（CC0）から自動で取り直します。
+
 ## Steamへの出し方
 
 `docs/STEAM.md` に、Windows版として書き出す手順と Steamworks の注意点をまとめています。
