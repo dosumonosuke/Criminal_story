@@ -12,7 +12,7 @@ New-Item -ItemType Directory -Force -Path $tmp | Out-Null
 function Get-File($url, $dest) {
     if (Test-Path $dest) { Write-Host "already exists: $dest"; return }
     Write-Host "downloading: $url"
-    Invoke-WebRequest -Uri $url -OutFile $dest
+    Invoke-WebRequest -Uri $url -OutFile $dest -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
 }
 
 # 1) 空の HDRI (Poly Haven, CC0)
@@ -37,7 +37,7 @@ foreach ($s in $sets) {
     New-Item -ItemType Directory -Force -Path $destDir | Out-Null
     # ZIP内の名前は Asphalt006_4K_Color.jpg の形式。プロジェクト側の名前に合わせて _4K_ / _2K_ を取り除く
     Get-ChildItem -Path $extract -Recurse -Include "*_Color.jpg", "*_NormalGL.jpg", "*_Roughness.jpg" | ForEach-Object {
-        $newName = $_.Name -replace "_4K_", "_" -replace "_2K_", "_"
+        $newName = $_.Name -replace "_4K-JPG", "" -replace "_2K-JPG", "" -replace "_4K_", "_" -replace "_2K_", "_"
         Copy-Item $_.FullName (Join-Path $destDir $newName) -Force
         Write-Host "placed: $newName"
     }

@@ -17,11 +17,14 @@ Unity版がいちばん詰まっているのは「実際にUnityで開いて動�
 
 ## 素材を取り直す（GitHub版には画像素材が入っていません）
 
-4. 解凍した中の `unity` フォルダにある **fetch-assets.ps1** を実行する
-   - ファイルを右クリック →「PowerShell で実行」
-   - 止められた場合は、PowerShell を開いて `unity` フォルダへ移動し、
-     `powershell -ExecutionPolicy Bypass -File .\fetch-assets.ps1` を実行
+4. 解凍した中の `unity` フォルダにある素材取得スクリプトを実行する
+   - **Windows**: **fetch-assets.ps1** を右クリック →「PowerShell で実行」
+     （止められた場合は PowerShell を開いて `unity` フォルダへ移動し、
+     `powershell -ExecutionPolicy Bypass -File .\fetch-assets.ps1` を実行）
+   - **Mac**: ターミナルを開いて `unity` フォルダへ移動し、`bash fetch-assets.sh` を実行
    - 終わると、空のHDRIと質感テクスチャ4種が自動で入ります（すべてCC0・無料）
+   - Mac版Unityでもプロジェクトは開けます。ただしSteam向けのWindows書き出しには
+     Windows Build Support が必要です（Macで再生確認だけなら不要）
 
 ## Unityで開く
 
